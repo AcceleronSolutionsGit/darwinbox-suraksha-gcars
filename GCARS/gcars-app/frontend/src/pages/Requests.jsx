@@ -20,7 +20,20 @@ import {
   Briefcase
 } from 'lucide-react';
 
-const STATUS_CLASS = { Approved: 'badge-success', Rejected: 'badge-danger', Pending: 'badge-warning', Initiated: 'badge-info' };
+const STATUS_CLASS = { 
+  Approved: 'badge-success', 
+  Rejected: 'badge-danger', 
+  Pending: 'badge-warning', 
+  Initiated: 'badge-info',
+  'PO Uploaded': 'badge-primary',
+  'GRN Created': 'badge-primary',
+  'Invoice Uploaded': 'badge-primary',
+  'Capitalized': 'badge-teal',
+  'SAP PR Created': 'badge-purple',
+  'SAP PR Released': 'badge-purple',
+  'SAP PO Created': 'badge-purple',
+  'SAP PO Released': 'badge-purple'
+};
 
 export default function Requests({ defaultView = '' }) {
   const { user } = useAuth();
@@ -134,10 +147,22 @@ export default function Requests({ defaultView = '' }) {
           <div style={{ width: '180px' }}>
             <select style={{ height: '48px', borderRadius: '12px', border: '1px solid var(--border-2)', background: 'var(--bg-main)' }} className="form-control" value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
               <option value="">Status: All Levels</option>
-              <option value="Initiated">Initiated</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
+              <optgroup label="Workflow Status">
+                <option value="Initiated">Initiated</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </optgroup>
+              <optgroup label="Post-Approval (SAP & PO)">
+                <option value="SAP PR Created">SAP PR Created</option>
+                <option value="SAP PR Released">SAP PR Released</option>
+                <option value="SAP PO Created">SAP PO Created</option>
+                <option value="SAP PO Released">SAP PO Released</option>
+                <option value="PO Uploaded">PO Uploaded</option>
+                <option value="GRN Created">GRN Created</option>
+                <option value="Invoice Uploaded">Invoice Uploaded</option>
+                <option value="Capitalized">Capitalized</option>
+              </optgroup>
             </select>
           </div>
           <div style={{ width: '150px' }}>

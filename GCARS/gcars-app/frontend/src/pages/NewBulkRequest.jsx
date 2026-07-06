@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { SearchableSelect } from '../components/common/SearchableSelect';
 import { 
   Target, 
   IndianRupee, 
@@ -62,6 +63,23 @@ export default function NewBulkRequest() {
   });
 
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
+
+  // Load Draft
+  useEffect(() => {
+    const draft = localStorage.getItem('capex_draft_bulk');
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        if (parsed.form) setForm(parsed.form);
+        if (parsed.items) setItems(parsed.items);
+      } catch (e) { console.error('Draft load error', e); }
+    }
+  }, []);
+
+  // Save Draft
+  useEffect(() => {
+    localStorage.setItem('capex_draft_bulk', JSON.stringify({ form, items }));
+  }, [form, items]);
 
   useEffect(() => {
     const loadMasters = async () => {
@@ -180,6 +198,7 @@ export default function NewBulkRequest() {
 
       if (data.success) {
         toast.success(`Request ${data.capex_no} created successfully!`);
+        localStorage.removeItem('capex_draft_bulk');
         navigate('/requests');
       }
     } catch (err) {
@@ -211,20 +230,25 @@ export default function NewBulkRequest() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-
             <div className="form-group">
               <label className="form-label">Target SBU<span style={{color:'var(--coral)'}}>*</span></label>
-              <select className="form-control" value={form.sbu} onChange={set('sbu')} required>
-                <option value="">--- Select SBU ---</option>
-                {sbus.map(s => <option key={s.id} value={s.sbu_name}>{s.sbu_name}</option>)}
-              </select>
+              <SearchableSelect 
+                value={form.sbu}
+                onChange={val => setForm(f => ({ ...f, sbu: val }))}
+                required
+                placeholder="--- Select SBU ---"
+                options={sbus.map(s => ({ value: s.sbu_name, label: s.sbu_name }))}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Target Location<span style={{color:'var(--coral)'}}>*</span></label>
-              <select className="form-control" value={form.location} onChange={set('location')} required>
-                <option value="">--- Select Location ---</option>
-                {locations.map(l => <option key={l.id} value={l.location}>{l.location}</option>)}
-              </select>
+              <SearchableSelect 
+                value={form.location}
+                onChange={val => setForm(f => ({ ...f, location: val }))}
+                required
+                placeholder="--- Select Location ---"
+                options={locations.map(l => ({ value: l.location, label: l.location }))}
+              />
             </div>
             
             {/* Row 1 */}

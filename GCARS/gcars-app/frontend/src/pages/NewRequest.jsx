@@ -59,6 +59,24 @@ export default function NewRequest() {
 
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
 
+  // Load Draft
+  useEffect(() => {
+    const draft = localStorage.getItem('capex_draft_single');
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        if (parsed.form) setForm(parsed.form);
+        if (parsed.items) setItems(parsed.items);
+        if (parsed.multiAsset !== undefined) setMultiAsset(parsed.multiAsset);
+      } catch (e) { console.error('Draft load error', e); }
+    }
+  }, []);
+
+  // Save Draft
+  useEffect(() => {
+    localStorage.setItem('capex_draft_single', JSON.stringify({ form, items, multiAsset }));
+  }, [form, items, multiAsset]);
+
   useEffect(() => {
     const loadMasters = async () => {
       try {
@@ -163,6 +181,7 @@ export default function NewRequest() {
 
       if (data.success) {
         toast.success(`Request ${data.capex_no} created successfully!`);
+        localStorage.removeItem('capex_draft_single');
         navigate('/requests');
       }
     } catch (err) {

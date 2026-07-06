@@ -4,6 +4,7 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 import { TableSkeleton, Skeleton } from '../components/common/Skeleton';
 import { Search, Plus, Edit2, Trash2, ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
+import { SearchableSelect } from '../components/common/SearchableSelect';
 
 const MASTER_CONFIG = {
   'asset-groups': {
@@ -54,7 +55,6 @@ const MASTER_CONFIG = {
     title: 'Budget Owners',
     endpoint: '/superadmin/budget-owners',
     columns: [
-      { key: 'id', label: 'ID', width: '60px' },
       { key: 'head', label: 'Role/Head' },
       { key: 'employee_name', label: 'Employee' },
       { key: 'emp_no', label: 'Emp Code' },
@@ -74,13 +74,10 @@ const MASTER_CONFIG = {
     endpoint: '/superadmin/broad-function-heads',
     params: { filter: 'BH' },
     columns: [
-      { key: 'id', label: 'ID', width: '50px' },
       { key: 'head', label: 'Head/Role' },
       { key: 'emp_name', label: 'Employee Name' },
       { key: 'emp_no', label: 'Emp No' },
-      { key: 'sbu_id', label: 'SBU ID' },
       { key: 'sbu_name', label: 'SBU Name' },
-      { key: 'bfun_id', label: 'BFun ID' },
       { key: 'b_func', label: 'Function' },
       { key: 'budget_owner', label: 'Status', type: 'badge' },
       { key: 'updated_at', label: 'Last Updated' }
@@ -232,7 +229,7 @@ const MASTER_CONFIG = {
       { key: 'type', label: 'Type', type: 'hidden', defaultValue: 'IT_REVIEWER' }
     ]
   },
-  'business-heads': {
+  'business-head-users': {
     title: 'Manage Business Head',
     endpoint: '/superadmin/manage-users',
     params: { type: 'BUSINESS_HEAD' },
@@ -272,9 +269,13 @@ export default function Masters() {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   
-  // For paginated masters (employees)
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // New states for employee filters
+  const [filterSbu, setFilterSbu] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [filterBfunc, setFilterBfunc] = useState('');
 
   // For selects that fetch data
   const [options, setOptions] = useState({});
@@ -285,6 +286,7 @@ export default function Masters() {
     try {
       const params = {
         ...(config.paginated ? { page, limit: 50, search } : { search }),
+        ...(type === 'employees' ? { sbu: filterSbu, location: filterLocation, b_func: filterBfunc } : {}),
         ...(config.params || {})
       };
       const { data: res } = await api.get(config.endpoint, { params });
@@ -297,7 +299,7 @@ export default function Masters() {
     } finally {
       setLoading(false);
     }
-  }, [config, page, search]);
+  }, [config, page, search, filterSbu, filterLocation, filterBfunc, type]);
 
   const loadOptions = useCallback(async () => {
     if (!config) return;
@@ -370,6 +372,35 @@ export default function Masters() {
           </button>
         </div>
       </div>
+
+      {type === 'employees' && (
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <div style={{ width: 200 }}>
+            <SearchableSelect 
+              value={filterSbu} 
+              onChange={val => { setFilterSbu(val); setPage(1); }} 
+              placeholder="All SBUs"
+              options={(options['sbu'] || []).map(opt => ({ value: opt.name, label: opt.name }))} 
+            />
+          </div>
+          <div style={{ width: 200 }}>
+            <SearchableSelect 
+              value={filterLocation} 
+              onChange={val => { setFilterLocation(val); setPage(1); }} 
+              placeholder="All Locations"
+              options={(options['location'] || []).map(opt => ({ value: opt.location, label: opt.location }))} 
+            />
+          </div>
+          <div style={{ width: 200 }}>
+            <SearchableSelect 
+              value={filterBfunc} 
+              onChange={val => { setFilterBfunc(val); setPage(1); }} 
+              placeholder="All Functions"
+              options={(options['b_func'] || []).map(opt => ({ value: opt.name, label: opt.name }))} 
+            />
+          </div>
+        </div>
+      )}
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div className="table-wrap">

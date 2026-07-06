@@ -1,9 +1,40 @@
+/**
+ * ============================================================
+ *  G-CARS 2 — MasterForm Page
+ * ============================================================
+ *  Generic create / edit form for every master-data entity.
+ *  The entity type is derived from the `:type` URL param and
+ *  resolved against the local MASTER_CONFIG map, which drives
+ *  the field list, API endpoint, and validation rules.
+ *
+ *  URL patterns:
+ *    /masters/:type/new         – Create a new record
+ *    /masters/:type/edit/:id    – Edit an existing record
+ *
+ *  Supported field types:
+ *    text | email | password | select | api-select | emp-search | hidden
+ *
+ *  Special field flags:
+ *    required      – Adds * marker and HTML required attribute
+ *    disabledOnEdit – Disables the field when editing (e.g. primary keys)
+ *    editOnly      – Only renders the field in edit mode (e.g. password reset)
+ *    placeholder   – Placeholder text for the input
+ *    fullWidth     – Spans both grid columns
+ * ============================================================
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import toast from 'react-hot-toast';
 import { ChevronLeft, Save, X } from 'lucide-react';
+import { SearchableSelect } from '../components/common/SearchableSelect';
 
+// ─────────────────────────────────────────────────────────────
+//  MASTER_CONFIG
+//  Maps each URL :type segment to its API endpoint and field
+//  definitions. Adding a new master entity only requires a new
+//  entry here — no other code changes needed.
+// ─────────────────────────────────────────────────────────────
 const MASTER_CONFIG = {
   'asset-groups': {
     title: 'Asset Groups',
@@ -38,7 +69,7 @@ const MASTER_CONFIG = {
       { key: 'budget_owner', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
     ]
   },
-  'business-heads': {
+  'business-heads-budget': {
     title: 'Business Heads',
     endpoint: '/superadmin/budget-owners',
     fields: [
@@ -67,6 +98,7 @@ const MASTER_CONFIG = {
       { key: 'costcentre', label: 'Cost Centre', type: 'text' },
       { key: 'rpt_code', label: 'Reporting To (Emp No)', type: 'text' },
       { key: 'rpt_to', label: 'Reporting To (Name)', type: 'text' },
+      { key: 'password', label: 'New Password', type: 'password', editOnly: true, placeholder: 'Leave blank to keep current password' },
       { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
     ]
   },
@@ -118,23 +150,39 @@ const MASTER_CONFIG = {
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+//  MasterForm Component
+// ─────────────────────────────────────────────────────────────
 export default function MasterForm() {
-  const { type, id } = useParams();
+  // ── URL params ────────────────────────────────────────────
+  const { type, id } = useParams();   // type = master entity key, id = record id when editing
   const navigate = useNavigate();
-  const config = MASTER_CONFIG[type];
-  
-  const [form, setForm] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [options, setOptions] = useState({});
-  
-  const [empSearch, setEmpSearch] = useState('');
-  const [empResults, setEmpResults] = useState([]);
-  const [searchingEmp, setSearchingEmp] = useState(false);
-  const [selectedEmps, setSelectedEmps] = useState({});
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [dropdownSearch, setDropdownSearch] = useState('');
+  const config = MASTER_CONFIG[type]; // Resolved entity config (or undefined for unknown types)
 
+  // ── Component state ───────────────────────────────────────
+  const [form,    setForm]    = useState({});    // Current form field values
+  const [loading, setLoading] = useState(false); // True while fetching existing record
+  const [saving,  setSaving]  = useState(false); // True while submitting the form
+  const [options, setOptions] = useState({});    // Options fetched for api-select fields
+
+  // Employee search state (shared across all emp-search fields)
+  const [empSearch,      setEmpSearch]      = useState('');   // Current search query text
+  const [empResults,     setEmpResults]     = useState([]);   // Search result list
+  const [searchingEmp,   setSearchingEmp]   = useState(false);// True while searching
+  const [selectedEmps,   setSelectedEmps]   = useState({});   // { fieldKey: { name, desg } }
+
+  // Searchable dropdown (api-select) state
+  const [activeDropdown,  setActiveDropdown]  = useState(null); // Key of the currently open dropdown
+  const [dropdownSearch,  setDropdownSearch]  = useState('');   // Text typed inside open dropdown
+
+  // ─────────────────────────────────────────────────────────
+  //  loadOptions
+  // ─────────────────────────────────────────────────────────
+  /**
+   * Pre-fetches dropdown options for every api-select field
+   * defined in the current entity's config. Results are stored
+   * in the `options` map keyed by field.key.
+   */
   const loadOptions = useCallback(async () => {
     if (!config) return;
     for (const field of config.fields) {
@@ -151,6 +199,14 @@ export default function MasterForm() {
     }
   }, [config]);
 
+  // ─────────────────────────────────────────────────────────
+  //  Employee search effect
+  // ─────────────────────────────────────────────────────────
+  /**
+   * Debounced employee search triggered whenever `empSearch` changes.
+   * Waits 400 ms after the user stops typing before calling the API
+   * to avoid excessive requests on each keystroke.
+   */
   useEffect(() => {
     const delay = setTimeout(async () => {
       if (!empSearch || empSearch.length < 2) {
@@ -170,6 +226,17 @@ export default function MasterForm() {
     return () => clearTimeout(delay);
   }, [empSearch]);
 
+  // ─────────────────────────────────────────────────────────
+  //  Data fetch / initialise effect
+  // ─────────────────────────────────────────────────────────
+  /**
+   * On mount (or when :type/:id changes):
+   *  - Loads dropdown options for api-select fields
+   *  - If editing (id is set), fetches the existing record and
+   *    pre-populates the form, including the emp-search display name
+   *  - If creating, initialises each field to its defaultValue or
+   *    the first option in a select list
+   */
   useEffect(() => {
     loadOptions();
     if (id) {
@@ -203,6 +270,16 @@ export default function MasterForm() {
     }
   }, [id, config, loadOptions]);
 
+  // ─────────────────────────────────────────────────────────
+  //  handleSubmit
+  // ─────────────────────────────────────────────────────────
+  /**
+   * Submits the form. Calls PUT when editing an existing record,
+   * POST when creating a new one. On success, navigates back to
+   * the master list for the current entity type.
+   *
+   * @param {React.FormEvent} e – The native form submit event
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -222,6 +299,7 @@ export default function MasterForm() {
     }
   };
 
+  // ── Guard: unknown type ───────────────────────────────────
   if (!config) return <div className="page-content">Invalid configuration</div>;
   if (loading) return <div className="page-content">Loading...</div>;
 
@@ -242,7 +320,7 @@ export default function MasterForm() {
       <div className="card" style={{ maxWidth: '800px', margin: '0 auto', padding: '32px' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {config.fields.map(field => (
+            {config.fields.filter(field => !field.editOnly || id).map(field => (
               <div key={field.key} className="form-group" style={{ gridColumn: field.fullWidth ? 'span 2' : 'auto' }}>
                 <label className="form-label">{field.label}{field.required && <span className="text-danger">*</span>}</label>
                 
@@ -392,6 +470,7 @@ export default function MasterForm() {
                     onChange={e => setForm({ ...form, [field.key]: e.target.value })}
                     required={field.required}
                     disabled={id && field.disabledOnEdit}
+                    placeholder={field.placeholder || ''}
                   />
                 )}
               </div>

@@ -33,6 +33,7 @@ export default function BudgetMapping() {
   const [assetGroups, setAssetGroups] = useState([]);
   const [sbus, setSbus] = useState([]);
   const [editingRow, setEditingRow] = useState(null);
+  const [expandedAssets, setExpandedAssets] = useState({});
 
   // Search & Filter State
   const [search, setSearch] = useState('');
@@ -227,16 +228,25 @@ export default function BudgetMapping() {
                 </div>
               ) : Object.entries(groupedMappings).map(([assetName, rules]) => (
                 <div key={assetName} className="card" style={{ padding: 0, marginBottom: '24px', overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 24px', background: 'var(--bg-2)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div 
+                    style={{ padding: '16px 24px', background: 'var(--bg-2)', borderBottom: expandedAssets[assetName] ? '1px solid var(--border)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                    onClick={() => setExpandedAssets(prev => ({ ...prev, [assetName]: !prev[assetName] }))}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
                       <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>{assetName}</h3>
                       <span className="badge badge-muted" style={{ fontSize: '10px' }}>{rules.length} {rules.length === 1 ? 'Rule' : 'Rules'}</span>
                     </div>
-                    <span className="badge badge-teal" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 800 }}>{rules[0].asset_group_name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <span className="badge badge-teal" style={{ textTransform: 'uppercase', fontSize: '10px', fontWeight: 800 }}>{rules[0].asset_group_name}</span>
+                      <button className="btn btn-ghost btn-sm" style={{ padding: '4px 12px' }}>
+                        {expandedAssets[assetName] ? 'Hide Details' : 'View Details'}
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="table-wrap horizontal-scroll">
+                  {expandedAssets[assetName] && (
+                    <div className="table-wrap horizontal-scroll">
                     <table className="table-premium">
                       <thead>
                         <tr>
@@ -248,13 +258,23 @@ export default function BudgetMapping() {
                       </thead>
                       <tbody>
                         {rules.map(rule => (
-                          <tr key={rule.id}>
+                          <tr key={rule.unique_id || rule.id}>
                             <td>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '4px' }}>
-                                {rule.sbu?.split(',').map((s, i) => <span key={i} className="badge badge-info" style={{ borderRadius: '4px', fontSize: '10px' }}>{s}</span>)}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-faint)', width: '30px' }}>SBU:</span>
+                                {rule.sbu?.split(',').map((s, i) => (
+                                  <div key={i} style={{ display: 'flex', alignItems: 'center', background: '#f1f3f5', border: '1px solid #e9ecef', borderRadius: '3px', padding: '2px 8px', fontSize: '11px', color: '#555', fontWeight: 600 }}>
+                                    {s}
+                                  </div>
+                                ))}
                               </div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                {(rule.b_fun_names || rule.b_fun || 'All').split(',').map((f, i) => <span key={i} className="badge badge-purple" style={{ borderRadius: '4px', fontSize: '10px' }}>{f}</span>)}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-faint)', width: '30px' }}>FUN:</span>
+                                {(rule.b_fun_names || rule.b_fun || 'All').split(',').map((f, i) => (
+                                  <div key={i} style={{ display: 'flex', alignItems: 'center', background: '#f1f3f5', border: '1px solid #e9ecef', borderRadius: '3px', padding: '2px 8px', fontSize: '11px', color: '#555', fontWeight: 600 }}>
+                                    {f}
+                                  </div>
+                                ))}
                               </div>
                             </td>
                             <td>
@@ -306,6 +326,7 @@ export default function BudgetMapping() {
                       </tbody>
                     </table>
                   </div>
+                  )}
                 </div>
               ))}
 

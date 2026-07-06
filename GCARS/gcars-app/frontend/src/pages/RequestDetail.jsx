@@ -290,6 +290,20 @@ export default function RequestDetail() {
               </div>
             )}
             
+            {request.quotation && (
+              <div style={{ marginTop: '24px', paddingBottom: '8px', borderBottom: '1px solid var(--border-2)' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '12px' }}>Supporting Documents & Quotations</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {request.quotation.split(';').filter(Boolean).map((file, idx) => (
+                    <a key={idx} href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}/uploads/${file}`} target="_blank" rel="noreferrer" className="btn btn-ghost" style={{ border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px', fontSize: '13px' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                      View Attachment {idx + 1}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ 
               marginTop: '16px', padding: '20px', 
               background: 'var(--bg-2)', borderRadius: '16px', 
@@ -317,7 +331,7 @@ export default function RequestDetail() {
                <h3 style={{ margin: 0, fontSize: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Financial & Sourcing</h3>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '24px' }}>
               <div style={{ padding: '16px', background: 'rgba(34,197,94,0.05)', borderRadius: '16px', border: '1px solid rgba(34,197,94,0.15)' }}>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--green-l)', textTransform: 'uppercase' }}>Total Request Value</span>
                 <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
@@ -325,6 +339,19 @@ export default function RequestDetail() {
                   <small style={{ fontSize: '12px', opacity: 0.5, marginLeft: '6px' }}>Excl. GST</small>
                 </div>
               </div>
+              
+              {request.budgeted_amount !== null && request.budgeted_amount !== undefined && (
+                <div style={{ padding: '16px', background: 'rgba(59,130,246,0.05)', borderRadius: '16px', border: '1px solid rgba(59,130,246,0.15)' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase' }}>Remaining Budget Allocation</span>
+                  <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
+                    ₹{Number(request.budgeted_amount - (request.budget_amount_consumed || 0) - (request.committed_amount || 0)).toLocaleString('en-IN')}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                    Total: ₹{Number(request.budgeted_amount).toLocaleString('en-IN')} | Pending/Consumed: ₹{Number((request.budget_amount_consumed || 0) + (request.committed_amount || 0)).toLocaleString('en-IN')}
+                  </div>
+                </div>
+              )}
+
               {request.approve_amount > 0 && (
                 <div style={{ padding: '16px', background: 'var(--primary-bg)', borderRadius: '16px', border: '1px solid var(--primary-border)' }}>
                   <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>Approved Sanction</span>
@@ -459,7 +486,7 @@ export default function RequestDetail() {
                     <div className={`timeline-dot ${t.status === 'Approved' ? 'approve' : t.status === 'Rejected' ? 'reject' : 'init'}`}></div>
                     <div className="timeline-content">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700 }}>{t.status}</span>
+                        <span style={{ fontSize: '12px', fontWeight: 700 }}>{t.status} <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>by {t.actor_name}</span></span>
                         <span style={{ fontSize: '10px', color: 'var(--text-faint)' }}>{new Date(t.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{t.comment}</div>

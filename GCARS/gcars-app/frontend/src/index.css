@@ -700,13 +700,16 @@ span   { color: inherit; }
 select.form-control {
   cursor: pointer;
   padding-right: 32px;
+  background-color: var(--bg-card);
 }
 [data-theme="light"] select.form-control {
-  background: var(--bg-3);
+  background-color: var(--bg-3);
 }
 select.form-control option {
   padding: 8px 14px;
   font-size: 14px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }
 
 textarea.form-control {
@@ -1021,17 +1024,7 @@ tbody tr:hover td { background: var(--bg-hover); }
 [data-theme="light"] .skeleton {
   background: var(--bg-2);
 }
-[data-theme="light"] @keyframes skeletonPulse {
-  0% { opacity: 0.6; background: #e0e0e0; }
-  50% { opacity: 0.8; background: #f0f0f0; }
-  100% { opacity: 0.6; background: #e0e0e0; }
-}
 
-[data-theme="dark"] @keyframes skeletonPulse {
-  0% { opacity: 0.4; background: rgba(255,255,255,0.03); }
-  50% { opacity: 0.6; background: rgba(255,255,255,0.07); }
-  100% { opacity: 0.4; background: rgba(255,255,255,0.03); }
-}
 
 /* =============================================
    PREMIUM TABLE SYSTEM

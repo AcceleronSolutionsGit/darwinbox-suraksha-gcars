@@ -3,6 +3,7 @@ import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { TableSkeleton } from '../components/common/Skeleton';
+import { SearchableSelect } from '../components/common/SearchableSelect';
 import { 
   Wallet, 
   Building2, 
@@ -143,9 +144,10 @@ export default function BudgetAllocation() {
   const stats = useMemo(() => {
     const total = allocations.reduce((s, a) => s + Number(a.budgeted_amount || 0), 0);
     const consumed = allocations.reduce((s, a) => s + Number(a.budget_amount_consumed || 0), 0);
-    const remaining = total - consumed;
-    const utilization = total > 0 ? (consumed / total) * 100 : 0;
-    return { total, consumed, remaining, utilization };
+    const committed = allocations.reduce((s, a) => s + Number(a.committed_amount || 0), 0);
+    const remaining = total - consumed - committed;
+    const utilization = total > 0 ? ((consumed + committed) / total) * 100 : 0;
+    return { total, consumed, committed, remaining, utilization };
   }, [allocations]);
 
   const openModal = (mode, data = null) => {
@@ -270,6 +272,11 @@ export default function BudgetAllocation() {
           <div className="stat-value">₹{stats.consumed.toLocaleString('en-IN')}</div>
           <div className="stat-label">Currently Consumed</div>
         </div>
+        <div className="stat-card" style={{ background: 'var(--glass)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div className="stat-icon" style={{ background: 'var(--bg-3)', color: 'var(--text-secondary)' }}><Activity size={22} /></div>
+          <div className="stat-value" style={{ color: 'var(--text-secondary)' }}>₹{stats.committed.toLocaleString('en-IN')}</div>
+          <div className="stat-label">Pending / Committed</div>
+        </div>
         <div className="stat-card teal">
           <div className="stat-icon teal"><ShieldCheck size={22} /></div>
           <div className="stat-value">₹{stats.remaining.toLocaleString('en-IN')}</div>
@@ -356,6 +363,7 @@ export default function BudgetAllocation() {
                   <th>Asset Scope</th>
                   <th>Budget Type</th>
                   <th style={{ textAlign: 'right' }}>Allocated</th>
+                  <th style={{ textAlign: 'right' }}>Committed</th>
                   <th style={{ textAlign: 'right' }}>Consumed</th>
                   <th style={{ textAlign: 'center' }}>Status</th>
                   <th style={{ width: '100px' }}></th>
@@ -383,11 +391,16 @@ export default function BudgetAllocation() {
                       ₹{Number(a.budgeted_amount).toLocaleString('en-IN')}
                     </td>
                     <td style={{ textAlign: 'right' }}>
+                       <div style={{ fontSize: '12px', fontWeight: 600, color: Number(a.committed_amount) > 0 ? 'var(--text-secondary)' : 'var(--text-faint)' }}>
+                         ₹{Number(a.committed_amount || 0).toLocaleString('en-IN')}
+                       </div>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
                        <div style={{ fontSize: '12px', fontWeight: 600, color: Number(a.budget_amount_consumed) > Number(a.budgeted_amount) ? 'var(--coral)' : 'inherit' }}>
                          ₹{Number(a.budget_amount_consumed).toLocaleString('en-IN')}
                        </div>
                        <div style={{ fontSize: '10px', color: 'var(--text-faint)', marginTop: '2px' }}>
-                         {((a.budget_amount_consumed / a.budgeted_amount) * 100).toFixed(1)}% utilized
+                         {(((Number(a.budget_amount_consumed) + Number(a.committed_amount || 0)) / a.budgeted_amount) * 100).toFixed(1)}% utilized
                        </div>
                     </td>
                     <td style={{ textAlign: 'center' }}>
@@ -455,42 +468,36 @@ export default function BudgetAllocation() {
                   <>
                     <div className="form-group">
                       <label className="form-label">SBU</label>
-                      <select 
-                         className="form-control"
+                      <SearchableSelect 
                          value={form.sbu_id}
-                         onChange={e => setForm({...form, sbu_id: e.target.value})}
+                         onChange={val => setForm({...form, sbu_id: val})}
                          required
-                      >
-                        <option value="">Select SBU...</option>
-                        {sbus.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                      </select>
+                         placeholder="Select SBU..."
+                         options={sbus.map(s => ({ value: s.id, label: s.sbu_name }))}
+                      />
                     </div>
 
                     <div className="form-row">
                       <div className="form-group">
                         <label className="form-label">Broad Function</label>
-                        <select 
-                           className="form-control"
+                        <SearchableSelect 
                            value={form.bfun_id}
-                           onChange={e => setForm({...form, bfun_id: e.target.value})}
+                           onChange={val => setForm({...form, bfun_id: val})}
                            required
-                        >
-                          <option value="">Select Function...</option>
-                          {functions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                        </select>
+                           placeholder="Select Function..."
+                           options={functions.map(f => ({ value: f.id, label: f.b_func }))}
+                        />
                       </div>
 
                       <div className="form-group">
                         <label className="form-label">Location</label>
-                        <select 
-                           className="form-control"
+                        <SearchableSelect 
                            value={form.loc_id}
-                           onChange={e => setForm({...form, loc_id: e.target.value})}
+                           onChange={val => setForm({...form, loc_id: val})}
                            required
-                        >
-                          <option value="">Select Location...</option>
-                          {locations.map(l => <option key={l.id} value={l.id}>{l.location}</option>)}
-                        </select>
+                           placeholder="Select Location..."
+                           options={locations.map(l => ({ value: l.id, label: l.location }))}
+                        />
                       </div>
                     </div>
                   </>

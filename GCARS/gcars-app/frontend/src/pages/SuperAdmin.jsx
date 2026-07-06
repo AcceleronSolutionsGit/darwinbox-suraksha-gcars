@@ -1130,6 +1130,7 @@ export default function SuperAdmin() {
             { label: 'Pending',         value: stats.pendingRequests,  icon: '⏳', color: 'amber' },
             { label: 'Approved',        value: stats.approvedRequests, icon: '✓',  color: 'teal' },
             { label: 'Total Budget',    value: fmtCr(stats.totalBudget),   icon: '₹',  color: 'purple' },
+            { label: 'Committed Budget', value: fmtCr(stats.committedBudget), icon: '📌', color: 'blue' },
             { label: 'Consumed Budget', value: fmtCr(stats.consumedBudget), icon: '📊', color: 'red' },
           ].map(s => (
             <div key={s.label} className={`stat-card ${s.color}`}>
