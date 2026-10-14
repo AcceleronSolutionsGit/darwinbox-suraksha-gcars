@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darwinbox Data Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-database"></i>
+                <span>DataSync Pro</span>
+            </div>
+            <nav class="menu">
+                <button class="menu-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </button>
+                <button class="menu-item" data-tab="employees">
+                    <i class="fa-solid fa-users"></i> Employees
+                </button>
+                <button class="menu-item" data-tab="formatted-data">
+                    <i class="fa-solid fa-table-list"></i> Formatted Data
+                </button>
+                <button class="menu-item" data-tab="locations">
+                    <i class="fa-solid fa-map-location-dot"></i> Locations
+                </button>
+                <button class="menu-item" data-tab="custom-api">
+                    <i class="fa-solid fa-code"></i> Custom API Builder
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <h2>Welcome back, Admin</h2>
+                <div class="user-profile">
+                    <div class="avatar">A</div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Dashboard Tab -->
+                <section id="dashboard" class="tab-content active">
+                    <div class="header-section">
+                        <h3>Data Synchronization Hub</h3>
+                        <p>Sync data from Darwinbox APIs to your local MySQL database.</p>
+                    </div>
+
+                    <div class="sync-cards">
+                        <div class="card glass-effect">
+                            <div class="card-icon suraksha">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <h4>Suraksha Employees</h4>
+                            <p>Fetch latest employee records from Suraksha Master API.</p>
+                            <button class="btn btn-primary" onclick="syncData('suraksha')">
+                                <i class="fa-solid fa-rotate"></i> Sync Suraksha
+                            </button>
+                        </div>
+
+                        <div class="card glass-effect">
+                            <div class="card-icon gcars">
+                                <i class="fa-solid fa-car"></i>
+                            </div>
+                            <h4>GCARS Employees</h4>
+                            <p>Fetch latest employee records from GCARS Master API.</p>
+                            <button class="btn btn-primary" onclick="syncData('gcars')">
+                                <i class="fa-solid fa-rotate"></i> Sync GCARS
+                            </button>
+                        </div>
+
+                        <div class="card glass-effect">
+                            <div class="card-icon location">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <h4>Location Reports</h4>
+                            <p>Fetch latest location data from Darwinbox Report API.</p>
+                            <button class="btn btn-primary" onclick="syncData('location')">
+                                <i class="fa-solid fa-rotate"></i> Sync Locations
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="sync-status" class="status-message"></div>
+                </section>
+
+                <!-- Employees Tab -->
+                <section id="employees" class="tab-content">
+                    <div class="header-section flex-between">
+                        <div>
+                            <h3>Employees Database</h3>
+                            <p>View all synchronized employee data.</p>
+                        </div>
+                        <button class="btn btn-outline" onclick="loadEmployees()">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="table-container glass-effect">
+                        <table id="employees-table">
+                            <thead>
+                                <tr>
+                                    <th>Emp No</th>
+                                    <th>Name</th>
+                                    <th>Grade</th>
+                                    <th>Designation</th>
+                                    <th>Email</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="employees-pagination" class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;"></div>
+                </section>
+
+                <!-- Formatted Data Tab -->
+                <section id="formatted-data" class="tab-content">
+                    <div class="header-section flex-between">
+                        <div>
+                            <h3>Consolidated Format</h3>
+                            <p>API Endpoint: <code>GET /api/format-data?source=...</code></p>
+                        </div>
+                        <div style="display: flex; gap: 15px;">
+                            <div style="display: flex;">
+                                <button class="btn btn-outline" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" onclick="loadFormattedData('Suraksha')">
+                                    <i class="fa-solid fa-shield-halved"></i> Suraksha
+                                </button>
+                                <button class="btn btn-outline" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: none;" onclick="copyApiUrl('Suraksha')" title="Copy API Endpoint">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                            <div style="display: flex;">
+                                <button class="btn btn-outline" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" onclick="loadFormattedData('GCARS')">
+                                    <i class="fa-solid fa-car"></i> GCARS
+                                </button>
+                                <button class="btn btn-outline" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: none;" onclick="copyApiUrl('GCARS')" title="Copy API Endpoint">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container glass-effect" style="max-height: 60vh; overflow-y: auto;">
+                        <table id="formatted-table" style="white-space: nowrap;">
+                            <thead>
+                                <tr>
+                                    <th>Compcode</th><th>Emp No</th><th>Name</th><th>Grade</th><th>Desg</th>
+                                    <th>SBU</th><th>B_Func</th><th>J_Func</th><th>Role</th><th>Industry</th>
+                                    <th>Rpt_Code</th><th>Rpt_To</th><th>Sap_Ter</th><th>Teritorry</th><th>Loc_Code</th>
+                                    <th>Location</th><th>Plant</th><th>Plant_Name</th><th>DOBC</th><th>DOJC</th>
+                                    <th>RetResDt</th><th>Email</th><th>Tphn_No1</th><th>Ret_Res_Tg</th><th>Cat</th>
+                                    <th>Actual_Loc</th><th>Aloc</th><th>State</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="formatted-pagination" class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;"></div>
+                </section>
+
+                <!-- Locations Tab -->
+                <section id="locations" class="tab-content">
+                    <div class="header-section flex-between">
+                        <div>
+                            <h3>Locations Database</h3>
+                            <p>View all synchronized location data.</p>
+                        </div>
+                        <button class="btn btn-outline" onclick="loadLocations()">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="table-container glass-effect">
+                        <table id="locations-table">
+                            <thead>
+                                <tr>
+                                    <th>Work Area Code</th>
+                                    <th>Loc Code</th>
+                                    <th>Plant</th>
+                                    <th>Location</th>
+                                    <th>Updated On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="locations-pagination" class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;"></div>
+                </section>
+
+                <!-- Custom API Tab -->
+                <section id="custom-api" class="tab-content">
+                    <div class="header-section">
+                        <h3>Custom API Builder</h3>
+                        <p>Write custom SQL queries to extract data with specific structures.</p>
+                    </div>
+                    
+                    <div class="query-builder glass-effect">
+                        <div class="form-group">
+                            <label for="sql-query">SQL Query (SELECT only)</label>
+                            <textarea id="sql-query" rows="4" placeholder="SELECT emp_no, name, location FROM employees WHERE grade = 'G2'"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="executeCustomQuery()">
+                            <i class="fa-solid fa-play"></i> Run & Generate JSON
+                        </button>
+                        
+                        <div class="api-endpoint-info">
+                            <p><strong>API Endpoint:</strong> <code>POST /api/custom-query</code></p>
+                            <p><strong>Body:</strong> <code>{ "query": "YOUR_SQL_HERE" }</code></p>
+                        </div>
+                    </div>
+                    
+                    <div class="json-result-container glass-effect" style="margin-top: 2rem;">
+                        <h4>Result Data</h4>
+                        <pre id="json-result" class="json-display">Run a query to see results...</pre>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <i class="fa-solid fa-check-circle toast-icon"></i>
+            <span id="toast-message">Operation successful</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
